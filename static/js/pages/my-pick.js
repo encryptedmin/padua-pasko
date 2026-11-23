@@ -23,11 +23,11 @@ export function init() {
     savedIdentity = readIdentity();
     if (savedIdentity && savedIdentity.participantId === participantId) {
       keyInput.value = savedIdentity.recovery_key;
-      localStatus.textContent = "May saved recovery key sa device na ito.";
+      localStatus.textContent = "A recovery key is saved on this device.";
       return true;
     }
     keyInput.value = "";
-    localStatus.textContent = "Walang saved key sa device na ito — ilagay ang recovery key mo.";
+    localStatus.textContent = "No key is saved on this device. Enter your recovery key.";
     return false;
   }
 
@@ -38,13 +38,13 @@ export function init() {
       people.forEach((person) => {
         const option = document.createElement("option");
         option.value = String(person.id);
-        option.textContent = person.has_drawn ? `${person.name} — Nakabunot na` : person.name;
+        option.textContent = person.has_drawn ? `${person.name} — Already drawn` : person.name;
         option.selected = Number(person.id) === participantId;
         participantSelect.append(option);
       });
     } catch {
       participantSelect.disabled = true;
-      localStatus.textContent = "Hindi ma-load ang pangalan. Subukang mag-refresh kapag may connection.";
+      localStatus.textContent = "Couldn't load the participant list. Refresh the page when you're back online.";
     }
   }
 
@@ -57,7 +57,7 @@ export function init() {
       if (cachedName) return cachedName;
       const recoveryKey = keyInput.value.trim();
       if (!participantId || !recoveryKey) {
-        errorRegion.textContent = "Piliin ang pangalan at ilagay ang recovery key muna.";
+        errorRegion.textContent = "Choose your name and enter your recovery key first.";
         return null;
       }
       try {
@@ -65,12 +65,12 @@ export function init() {
         cachedName = String(result.name || "");
         if (cachedName) {
           saveIdentity(participantId, recoveryKey);
-          localStatus.textContent = "Naka-save na sa device na ito ang recovery key.";
+          localStatus.textContent = "The recovery key is now saved on this device.";
           errorRegion.textContent = "";
         }
         return cachedName;
       } catch (error) {
-        errorRegion.textContent = error.message || "Hindi tugma ang recovery key.";
+        errorRegion.textContent = error.message || "That recovery key doesn't match.";
         return null;
       }
     },
@@ -94,7 +94,7 @@ export function init() {
       errorRegion.textContent = "";
     } catch (error) {
       errorRegion.textContent = error.code === "already_drawn"
-        ? "Nakabunot na ang pangalang ito. Sa bagong device, hindi pa kayang i-claim ng backend ang dating draw. Tingnan ang TODO sa FRONTEND.md."
+        ? "This name has already drawn. Recovery on a new device isn't supported yet. See the TODO in FRONTEND.md."
         : error.message;
     } finally {
       participantSelect.disabled = false;
@@ -106,7 +106,7 @@ export function init() {
     if (busy) return;
     const recoveryKey = keyInput.value.trim();
     if (!participantId || !recoveryKey) {
-      errorRegion.textContent = "Ilagay muna ang recovery key mo.";
+      errorRegion.textContent = "Enter your recovery key first.";
       return;
     }
     busy = true;
@@ -115,11 +115,11 @@ export function init() {
       const result = await apiPost("/api/my-pick", { participant_id: participantId, recovery_key: recoveryKey, reveal: true });
       cachedName = String(result.name || "");
       saveIdentity(participantId, recoveryKey);
-      localStatus.textContent = "Naibahagi na ang pick mo sa reveals page.";
+      localStatus.textContent = "Your pick has been shared on the Shared Picks page.";
       errorRegion.textContent = "";
       if (cachedName) await controller?.show();
     } catch (error) {
-      errorRegion.textContent = error.message || "Hindi ma-reveal ang pick. Pakisubukan ulit.";
+      errorRegion.textContent = error.message || "Couldn't share your pick. Please try again.";
     } finally {
       revealButton.disabled = false;
       busy = false;

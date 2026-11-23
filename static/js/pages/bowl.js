@@ -58,7 +58,7 @@ export function init() {
         stage.hidden = true;
       }
     } catch {
-      drawError.textContent = "Hindi ma-check ang bunutan. Patuloy na susubok kapag may connection.";
+      drawError.textContent = "Couldn't check the draw. We'll keep trying when you're back online.";
     }
   }
 
@@ -85,7 +85,7 @@ export function init() {
     onReveal: async () => secretName,
     onShow: () => {
       document.getElementById("secret-reminder").hidden = false;
-      document.getElementById("budget-reminder").textContent = budget ? `Huwag kalimutan ang budget na ${budget}!` : "Secret lang natin!";
+      document.getElementById("budget-reminder").textContent = budget ? `Remember the budget: ${budget}!` : "Keep your pick secret!";
       celebrate("trio");
       playSound("jingle");
       addGiftRain();
@@ -133,18 +133,18 @@ export function init() {
       return;
     }
     if (error?.code === "not_open") {
-      drawError.textContent = "Hindi pa bukas ang bunutan. Hintayin ang organizer.";
+      drawError.textContent = "The draw isn't open yet. Please wait for the organizer.";
       return;
     }
     if (error?.code === "deadlock") {
-      drawError.textContent = "Hindi natuloy ang bunutan. Kausapin ang organizer para i-reset.";
+      drawError.textContent = "The draw couldn't be completed. Please ask the organizer to reset it.";
       return;
     }
     if (state?.status && state.status !== "OPEN") {
-      drawError.textContent = "Nakabunot ka na pero hindi ma-verify ang resulta — kausapin ang organizer (kailangan i-reset ang buong bunutan).";
+      drawError.textContent = "Your draw was recorded, but we couldn't verify the result. Please ask the organizer to reset the draw.";
       return;
     }
-    drawError.textContent = "Nakabunot ka na pero nawala ang result — kausapin ang organizer (kailangan i-reset ang buong bunutan).";
+    drawError.textContent = "Your draw was recorded, but the result was lost. Please ask the organizer to reset the draw.";
   }
 
   drawButton.addEventListener("click", async () => {
@@ -209,10 +209,10 @@ export function init() {
   document.getElementById("copy-recovery-key")?.addEventListener("click", async () => {
     try {
       await copyText(recoveryOutput.textContent);
-      keyStatus.textContent = "Nailagay sa clipboard ang sikretong susi.";
+      keyStatus.textContent = "Recovery key copied to the clipboard.";
       playSound("blip");
     } catch {
-      keyStatus.textContent = "Hindi automatic ang copy. Pindutin nang matagal ang susi para kopyahin.";
+      keyStatus.textContent = "Couldn't copy automatically. Press and hold the key to copy it.";
     }
   });
 

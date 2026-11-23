@@ -1,14 +1,14 @@
 {% extends "bunutan/base.html" %}
-{% block title %}Ilagay ang Sikretong Code · Bunutan{% endblock %}
+{% block title %}Enter the Secret Code · Gift Exchange{% endblock %}
 {% block page_name %}enter{% endblock %}
 {% block content %}
 <section class="hero-card enter-card capiz-card" aria-labelledby="enter-title">
-  <div class="eyebrow"><span class="eyebrow-star">✦</span> Pasko na, pamilya!</div>
-  <h1 class="display-title" id="enter-title">Maligayang <span>Pasko!</span></h1>
-  <p class="hero-copy">Ilagay ang Sikretong Code para makasali sa ating bunutan.</p>
+  <div class="eyebrow"><span class="eyebrow-star">✦</span> Happy holidays, family!</div>
+  <h1 class="display-title" id="enter-title">Merry <span>Christmas!</span></h1>
+  <p class="hero-copy">Enter the secret code to join our gift exchange.</p>
   <form id="code-entry-form" method="post" action="/api/enter" novalidate>
     {% csrf_token %}
-    <label class="field-label" for="code-input">Sikretong Code</label>
+    <label class="field-label" for="code-input">Secret code</label>
     <div class="code-grid" id="code-boxes" role="group" aria-label="Nine character event code">
       <input id="code-input" name="code" data-code-index="0" type="text" maxlength="1" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Code character 1" required>
       <input data-code-index="1" type="text" maxlength="1" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Code character 2" required>
@@ -20,12 +20,12 @@
       <input data-code-index="7" type="text" maxlength="1" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Code character 8" required>
       <input data-code-index="8" type="text" maxlength="1" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Code character 9" required>
     </div>
-    <p class="field-hint">Pwede ring i-paste ang buong code ✨</p>
+    <p class="field-hint">You can also paste the full code ✨</p>
     <p id="code-error" class="form-message" role="alert" aria-live="assertive"></p>
     <p id="code-lockout" class="lockout-message" role="status" aria-live="polite" hidden></p>
-    <button class="btn btn-primary btn-wide" id="code-submit" type="submit"><span>Ipasok ang code</span><span aria-hidden="true">→</span></button>
+    <button class="btn btn-primary btn-wide" id="code-submit" type="submit"><span>Enter code</span><span aria-hidden="true">→</span></button>
   </form>
-  <div class="tiny-copy"><span aria-hidden="true">🕯️</span> Family-only ang event code</div>
+  <div class="tiny-copy"><span aria-hidden="true">🕯️</span> This event code is for family only</div>
 </section>
 <div class="floating-sparkles" aria-hidden="true"><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span></div>
 {% endblock %}

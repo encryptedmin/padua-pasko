@@ -1,18 +1,18 @@
 {% extends "bunutan/base.html" %}
-{% block title %}Piliin ang pangalan mo · Bunutan{% endblock %}
+{% block title %}Choose Your Name · Gift Exchange{% endblock %}
 {% block page_name %}pick-name{% endblock %}
 {% block content %}
 <section class="page-heading">
-  <div class="eyebrow">🎄 Family bunutan {{ event.year }}</div>
-  <h1 class="display-title">Ikaw ba si <span>…?</span></h1>
-  <p class="hero-copy">Piliin lang ang sarili mong pangalan – hindi puwedeng baguhin pagkabunot.</p>
+  <div class="eyebrow">🎄 Family gift exchange {{ event.year }}</div>
+  <h1 class="display-title">Are you <span>…?</span></h1>
+  <p class="hero-copy">Choose your own name. You can't change it after drawing.</p>
   <p class="event-meta" id="pick-event-meta">Budget: <strong id="event-budget">{{ event.budget_text }}</strong><span class="meta-separator">✦</span><span id="event-party-date">{% if event.party_date %}{{ event.party_date|date:"M j, Y" }}{% else %}Party date soon!{% endif %}</span></p>
 </section>
 
 <section id="waiting-state" class="waiting-card capiz-card" {% if is_open %}hidden{% endif %} aria-live="polite">
   <div class="waiting-bowl" aria-hidden="true"><span>🎁</span></div>
-  <h2>Hindi pa bukas ang bunutan</h2>
-  <p>Konting hintay pa! Mag-a-update ito kapag binuksan na ng organizer.</p>
+  <h2>The draw isn't open yet</h2>
+  <p>Hang tight! This page will update when the organizer opens the draw.</p>
   <p class="event-meta">Budget: <strong>{{ event.budget_text }}</strong><span class="meta-separator">✦</span>{% if event.party_date %}{{ event.party_date|date:"M j, Y" }}{% else %}Party date soon!{% endif %}</p>
 </section>
 
@@ -26,17 +26,17 @@
     <button type="submit">Continue</button>
   </form>
   <p id="claim-error" class="form-message" role="alert" aria-live="assertive"></p>
-  <p class="field-hint recovery-help">Kung bagong phone ka at wala kang saved recovery key, kausapin ang organizer para matulungan kang mag-reset.</p>
-  <p class="privacy-note"><span aria-hidden="true">🤫</span> Piliin lang ang sarili mong pangalan – hindi puwedeng baguhin pagkabunot.</p>
+  <p class="field-hint recovery-help">Using a new phone without your saved recovery key? Ask the organizer for help resetting your draw.</p>
+  <p class="privacy-note"><span aria-hidden="true">🤫</span> Choose your own name. You can't change it after drawing.</p>
 </section>
 
 <dialog id="claim-confirm-modal" class="festive-dialog" aria-labelledby="claim-modal-title">
   <div class="dialog-sparkle" aria-hidden="true">✨</div>
-  <h2 id="claim-modal-title">Ikaw ba si <span id="confirm-participant-name"></span>?</h2>
-  <p>Siguraduhin muna bago humalo sa bowl!</p>
+  <h2 id="claim-modal-title">Are you <span id="confirm-participant-name"></span>?</h2>
+  <p>Make sure before joining the bowl!</p>
   <div class="dialog-actions">
-    <button id="confirm-claim" class="btn btn-primary" type="button">Oo, ako 'yan!</button>
-    <button id="cancel-claim" class="btn btn-ghost" type="button">Hindi</button>
+    <button id="confirm-claim" class="btn btn-primary" type="button">Yes, that's me!</button>
+    <button id="cancel-claim" class="btn btn-ghost" type="button">No</button>
   </div>
 </dialog>
 {% endblock %}

@@ -20,7 +20,7 @@ class Event(models.Model):
         REVEAL = "REVEAL", "Reveal"
         CLOSED = "CLOSED", "Closed"
 
-    title = models.CharField(max_length=120, default="Family Bunutan")
+    title = models.CharField(max_length=120, default="Family Gift Exchange")
     year = models.PositiveSmallIntegerField()
     budget_text = models.CharField(max_length=80, default="₱300–₱500")
     party_date = models.DateField(null=True, blank=True)
@@ -104,4 +104,4 @@ class Reveal(models.Model):
         ]
 
     def __str__(self) -> str:
-        return f"{self.receiver} was {self.giver}'s monito/monita"
+        return f"{self.receiver} was {self.giver}'s recipient"

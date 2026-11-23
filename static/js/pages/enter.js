@@ -58,7 +58,7 @@ export function init() {
     const paint = () => {
       const minutes = Math.floor(remaining / 60).toString().padStart(2, "0");
       const secs = (remaining % 60).toString().padStart(2, "0");
-      lockoutRegion.textContent = `Sandali lang — puwede ulit sa ${minutes}:${secs}.`;
+      lockoutRegion.textContent = `Please wait — you can try again in ${minutes}:${secs}.`;
       if (remaining <= 0) {
         window.clearInterval(lockTimer);
         lockoutRegion.hidden = true;
@@ -73,7 +73,7 @@ export function init() {
   }
 
   async function flashWrong(message) {
-    errorRegion.textContent = message || "Hindi tugma ang code. Pakisuri at subukan ulit.";
+    errorRegion.textContent = message || "That code doesn't match. Check it and try again.";
     grid.classList.remove("is-wrong");
     void grid.offsetWidth;
     grid.classList.add("is-wrong");
@@ -90,7 +90,7 @@ export function init() {
     event.preventDefault();
     const code = inputs.map((input) => input.value).join("");
     if (code.length !== 9) {
-      errorRegion.textContent = "Kumpletuhin muna ang 9 na character ng code.";
+      errorRegion.textContent = "Enter all 9 characters of the code first.";
       focusAt(inputs.findIndex((input) => !input.value));
       return;
     }
@@ -121,7 +121,7 @@ export function init() {
       } else if (error instanceof ApiError && error.code === "bad_code") {
         void flashWrong(error.message);
       } else {
-        errorRegion.textContent = error.message || "Hindi ma-verify ang code. Pakisuri ang connection at subukan ulit.";
+        errorRegion.textContent = error.message || "We couldn't verify the code. Check your connection and try again.";
       }
     }
   });

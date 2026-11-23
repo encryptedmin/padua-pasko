@@ -1,32 +1,32 @@
 {% extends "bunutan/base.html" %}
-{% block title %}Tingnan ang pick ko · Bunutan{% endblock %}
+{% block title %}View My Pick · Gift Exchange{% endblock %}
 {% block page_name %}my-pick{% endblock %}
 {% block content %}
 <section class="page-heading">
-  <div class="eyebrow">🔐 Private pick mo</div>
-  <h1 class="display-title">Akin 'to, <span>secret!</span></h1>
-  <p class="hero-copy">Gamitin ang sikretong susi para makita ulit ang pangalan.</p>
+  <div class="eyebrow">🔐 Your private pick</div>
+  <h1 class="display-title">Your pick is <span>secret!</span></h1>
+  <p class="hero-copy">Use your recovery key to view your pick again.</p>
 </section>
 
 <section class="my-pick-card capiz-card">
   <form id="my-pick-form" method="post" action="/api/my-pick">
     {% csrf_token %}
     <input id="participant-id" type="hidden" name="participant_id" value="{{ request.session.me }}">
-    <label class="field-label" for="manual-participant-select">Pangalan ko</label>
+    <label class="field-label" for="manual-participant-select">My name</label>
     <select id="manual-participant-select" class="text-input" aria-describedby="manual-recovery-note"></select>
     <label class="field-label" for="recovery-key-input">Recovery key</label>
-    <input id="recovery-key-input" class="text-input recovery-input" name="recovery_key" type="password" autocomplete="off" autocorrect="off" spellcheck="false" required placeholder="Idikit o ilagay ang susi">
-    <p id="local-key-status" class="field-hint">Tinitingnan ang saved key sa device na ito…</p>
-    <button id="view-pick-button" class="hold-reveal" type="button" aria-expanded="false" aria-controls="my-pick-result">Pindutin at hawakan para makita</button>
-    {% if is_reveal %}<button id="reveal-myself-button" class="btn btn-secondary btn-wide" type="button">I-reveal ang pick ko sa pamilya</button>{% endif %}
+    <input id="recovery-key-input" class="text-input recovery-input" name="recovery_key" type="password" autocomplete="off" autocorrect="off" spellcheck="false" required placeholder="Paste or enter your key">
+    <p id="local-key-status" class="field-hint">Checking for a saved key on this device…</p>
+    <button id="view-pick-button" class="hold-reveal" type="button" aria-expanded="false" aria-controls="my-pick-result">Press and hold to view</button>
+    {% if is_reveal %}<button id="reveal-myself-button" class="btn btn-secondary btn-wide" type="button">Share my pick with the family</button>{% endif %}
   </form>
   <p id="my-pick-error" class="form-message" role="alert" aria-live="assertive"></p>
   <div id="my-pick-result-card" class="my-pick-result-card" hidden>
-    <button id="accessibility-my-pick-toggle" class="btn btn-ghost reveal-toggle" type="button" aria-pressed="false" aria-controls="my-pick-result">Ipakita ang pangalan</button>
+    <button id="accessibility-my-pick-toggle" class="btn btn-ghost reveal-toggle" type="button" aria-pressed="false" aria-controls="my-pick-result">Show my pick</button>
     <p id="my-pick-result" class="draw-result" aria-live="polite" aria-atomic="true"></p>
-    <button id="hide-my-pick" class="btn btn-ghost" type="button" hidden>Itago</button>
+    <button id="hide-my-pick" class="btn btn-ghost" type="button" hidden>Hide</button>
   </div>
-  <p id="manual-recovery-note" class="new-device-note"><strong>Bagong phone?</strong> Ilagay muna ang event code, pagkatapos piliin ang pangalan mo sa page ng mga pangalan. Kapag nakabunot na ang pangalan mo, kailangang maidugtong ng backend ang recovery flow sa device na ito. <span class="todo-inline">TODO: see FRONTEND.md</span></p>
-  <a class="btn btn-link" href="/wishlists/">Silipin ang wish lists ng pamilya →</a>
+  <p id="manual-recovery-note" class="new-device-note"><strong>New phone?</strong> Enter the event code, then select your name from the participant list. If you have already drawn, recovery on this device is not yet supported. <span class="todo-inline">See TODO in FRONTEND.md</span></p>
+  <a class="btn btn-link" href="/wishlists/">Browse family wish lists →</a>
 </section>
 {% endblock %}

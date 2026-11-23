@@ -9,54 +9,7 @@ const CONFIRM_COPY = {
   reset: ["Reset all results?", "All draws will be erased and everyone in the family will need to draw again."],
 };
 
-function englishMessage(text) {
-  const exact = new Map([
-    ["Na-update ang settings.", "Settings updated."],
-    ["Na-update ang event settings.", "Event settings updated."],
-    ["Pakisuri ang event settings.", "Please review the event settings."],
-    ["Naka-lock na ang listahan ng pangalan pagkatapos buksan ang bunutan.", "The participant list is locked after the draw opens."],
-    ["Maglagay ng kahit isang pangalan.", "Enter at least one name."],
-    ["Tinanggal ang participant at kaugnay na exclusions.", "Participant and related exclusions deleted."],
-    ["Hindi makita ang pangalan.", "Participant not found."],
-    ["Naka-lock na ang exclusions pagkatapos buksan ang bunutan.", "Exclusions are locked after the draw opens."],
-    ["Naka-lock na ang exclusions matapos buksan ang bunutan.", "Exclusions are locked after the draw opens."],
-    ["Pumili ng dalawang magkaibang pangalan.", "Select two different participants."],
-    ["Nagdagdag ng mutual exclusion.", "Mutual exclusion added."],
-    ["Idinagdag ang mutual exclusion.", "Mutual exclusion added."],
-    ["Inalis ang mutual exclusion.", "Mutual exclusion removed."],
-    ["Pumili muna ng exclusion na aalisin.", "Select an exclusion pair to remove."],
-    ["Bukas na ang bunutan!", "The draw is now open!"],
-    ["Bukas na ang bunutan.", "The draw is now open."],
-    ["Nagsimula na ang reveal.", "The reveal has started."],
-    ["Nagsimula na ang reveal!", "The reveal has started!"],
-    ["Sarado na ang bunutan.", "The draw is closed."],
-    ["Isinara na ang bunutan.", "The draw is closed."],
-    ["Na-reset ang bunutan.", "The draw has been reset."],
-    ["Na-reset ang lahat ng draw.", "All draws have been reset."],
-  ]);
-  if (exact.has(text)) return exact.get(text);
-  let match = text.match(/^Nagdagdag ng (\d+) pangalan\.?$/);
-  if (match) return `Added ${match[1]} participant${match[1] === "1" ? "" : "s"}.`;
-  match = text.match(/^May kaparehong pangalan na: (.+)\.?$/);
-  if (match) return `A participant named ${match[1]} already exists.`;
-  match = text.match(/^(.+) ay lampas sa 40 character\.?$/);
-  if (match) return `“${match[1]}” is longer than the 40-character limit.`;
-  match = text.match(/^Hindi maidagdag ang (.+)\.?$/);
-  if (match) return `Could not add ${match[1]}.`;
-  if (/\b(?:Nagdagdag|Na-update|Tinanggal|Inalis|Binuksan|Bukas na|Isinara|Sarado na|Nagsimula|Na-reset)\b/i.test(text)) {
-    return "The requested change was saved.";
-  }
-  if (/\b(?:Hindi|Pumili|Maglagay|Naka-lock|kailangan|lampas)\b/i.test(text)) {
-    return "Please check the information and try again.";
-  }
-  return text;
-}
-
 export function init() {
-  document.querySelectorAll(".manage-message, .manage-login-card .form-message").forEach((message) => {
-    message.textContent = englishMessage(message.textContent.trim());
-  });
-
   const total = document.getElementById("total-count");
   const drawn = document.getElementById("drawn-count");
   const remaining = document.getElementById("remaining-count");

@@ -1,7 +1,7 @@
 /** Fetch JSON from the same-origin Django API with CSRF and a hard timeout. */
 export class ApiError extends Error {
   constructor(code, message, status = 0, retryAfter = 0) {
-    super(message || "Hindi maabot ang bunutan. Subukan ulit.");
+    super(message || "The gift exchange is unavailable. Please try again.");
     this.name = "ApiError";
     this.code = code || "request_failed";
     this.status = status;
@@ -48,8 +48,8 @@ export async function apiRequest(path, { method = "GET", body, timeout = 10_000 
     return data;
   } catch (error) {
     if (error instanceof ApiError) throw error;
-    if (error?.name === "AbortError") throw new ApiError("timeout", "Medyo mabagal ang connection. Subukan ulit.", 0);
-    throw new ApiError("network_error", "Walang connection sa bunutan. Pakisuri ang Wi-Fi at subukan ulit.", 0);
+    if (error?.name === "AbortError") throw new ApiError("timeout", "The request timed out. Please try again.", 0);
+    throw new ApiError("network_error", "Couldn't connect to the gift exchange. Check your connection and try again.", 0);
   } finally {
     window.clearTimeout(timeoutId);
   }

@@ -1,6 +1,6 @@
-# Bunutan
+# Gift Exchange
 
-Bunutan is a small server-rendered Django app for a Filipino Christmas gift exchange. The templates provide stable, minimal markup; a separate frontend can connect the forms and controls to the JSON endpoints.
+Gift Exchange is a small server-rendered Django app for a Filipino Christmas gift exchange. The templates provide stable, minimal markup; a separate frontend can connect the forms and controls to the JSON endpoints.
 
 ## Requirements
 
@@ -67,7 +67,7 @@ After the first deploy, check:
 1. `/healthz` returns `{"ok": true}`.
 2. `/` loads and accepts the event code.
 3. The organizer can sign in at `/manage/login/`.
-4. Add participants, then open the bunutan.
+4. Add participants, then open the draw.
 5. Draw on two separate phones and verify both draws complete.
 6. Verify the organizer dashboard shows only participant names and drawn/not-drawn status, never picks or recovery keys.
 

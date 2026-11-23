@@ -54,7 +54,7 @@ export function init() {
           return;
         }
       }
-      errorRegion.textContent = error.message || "Hindi ma-select ang pangalan. Subukan ulit.";
+      errorRegion.textContent = error.message || "Couldn't select that name. Please try again.";
       confirmButton.disabled = false;
     } finally {
       busy = false;
@@ -77,7 +77,7 @@ export function init() {
       button.className = "name-card";
       button.style.animationDelay = `${Math.min(index * 45, 420)}ms`;
       button.disabled = Boolean(person.has_drawn);
-      button.setAttribute("aria-label", person.has_drawn ? `${person.name}, nakabunot na` : `Piliin si ${person.name}`);
+      button.setAttribute("aria-label", person.has_drawn ? `${person.name}, already drawn` : `Choose ${person.name}`);
       const emoji = document.createElement("span");
       emoji.className = "name-card-emoji";
       emoji.setAttribute("aria-hidden", "true");
@@ -87,7 +87,7 @@ export function init() {
       const name = document.createElement("strong");
       name.textContent = person.name;
       const status = document.createElement("span");
-      status.textContent = person.has_drawn ? "Nakabunot na ✓" : "Piliin ako";
+      status.textContent = person.has_drawn ? "Already drawn ✓" : "Choose me";
       copy.append(name, status);
       button.append(emoji, copy);
       wrap.append(button);
@@ -107,7 +107,7 @@ export function init() {
           const link = document.createElement("a");
           link.className = "drawn-pick-link";
           link.href = "/my-pick/";
-          link.textContent = "Tingnan ang pick ko →";
+          link.textContent = "View my pick →";
           wrap.append(link);
         }
       }
@@ -135,7 +135,7 @@ export function init() {
         content.hidden = true;
       }
     } catch (error) {
-      if (!cards.childElementCount) errorRegion.textContent = "Hindi ma-load ang family list. Pakisuri ang connection at mag-refresh.";
+      if (!cards.childElementCount) errorRegion.textContent = "Couldn't load the family list. Check your connection and refresh the page.";
     }
   }
 

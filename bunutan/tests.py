@@ -286,7 +286,7 @@ class OrganizerTests(TestCase):
             follow=True,
         )
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "May kaparehong pangalan na: mAmA.")
+        self.assertContains(response, "A participant named mAmA already exists.")
         self.assertEqual(Participant.objects.filter(event=self.event).count(), 3)
 
     def test_participant_add_form_handles_database_integrity_error(self):
@@ -297,7 +297,7 @@ class OrganizerTests(TestCase):
                 follow=True,
             )
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "May kaparehong pangalan na: Cousin Bea.")
+        self.assertContains(response, "A participant named Cousin Bea already exists.")
 
     def test_open_validates_and_locked_edits_are_rejected(self):
         Participant.objects.create(event=self.event, name="Cousin Bea")
@@ -328,7 +328,7 @@ class OrganizerTests(TestCase):
         response = self.client.post("/manage/", {"action": "open"}, follow=True)
         self.event.refresh_from_db()
         self.assertEqual(self.event.status, Event.Status.SETUP)
-        self.assertContains(response, "Walang pinapayagang recipient para kay: Mama")
+        self.assertContains(response, "No allowed recipient for: Mama")
 
     def test_reveal_action_waits_for_all_draws(self):
         self.event.status = Event.Status.OPEN

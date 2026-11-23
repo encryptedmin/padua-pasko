@@ -1,28 +1,28 @@
 {% extends "bunutan/base.html" %}
-{% block title %}Wish lists ng pamilya · Bunutan{% endblock %}
+{% block title %}Family Wish Lists · Gift Exchange{% endblock %}
 {% block page_name %}wishlists{% endblock %}
 {% block content %}
 <section class="page-heading">
-  <div class="eyebrow">🎀 Gift hints mula sa pamilya</div>
-  <h1 class="display-title">Wish lists <span>natin</span></h1>
-  <p class="hero-copy">Mga munting clue para mas lalong swak ang regalo.</p>
+  <div class="eyebrow">🎀 Gift ideas from the family</div>
+  <h1 class="display-title">Wish lists <span>for us</span></h1>
+  <p class="hero-copy">A few clues to help your gift hit the mark.</p>
 </section>
 
 <section class="wishlist-compose capiz-card">
   <form id="wishlist-form" method="post" action="/api/wishlist">
     {% csrf_token %}
     <input id="wishlist-participant-id" type="hidden" value="{{ request.session.me }}">
-    <label class="field-label" for="wishlist-input">Ano ang wish mo?</label>
-    <textarea id="wishlist-input" class="text-input wishlist-input" name="text" maxlength="500" rows="4" placeholder="Kulay, hobby, snacks, o kahit anong clue…"></textarea>
-    <div class="form-row"><span id="wishlist-identity-note" class="field-hint">Piliin muna ang pangalan mo para makapag-save.</span><span id="wishlist-count" class="character-count" aria-live="polite" aria-atomic="true">0 / 500</span></div>
-    <button id="wishlist-submit" class="btn btn-primary" type="submit" disabled>I-save ang wish list</button>
+    <label class="field-label" for="wishlist-input">What's on your wish list?</label>
+    <textarea id="wishlist-input" class="text-input wishlist-input" name="text" maxlength="500" rows="4" placeholder="Color, hobby, snacks, or any clue…"></textarea>
+    <div class="form-row"><span id="wishlist-identity-note" class="field-hint">Choose your name to save your list.</span><span id="wishlist-count" class="character-count" aria-live="polite" aria-atomic="true">0 / 500</span></div>
+    <button id="wishlist-submit" class="btn btn-primary" type="submit" disabled>Save wish list</button>
   </form>
   <p id="wishlist-status" class="form-message" role="status" aria-live="polite"></p>
 </section>
 
 <section class="wishlist-board" aria-labelledby="wishlists-heading">
-  <div class="section-heading"><h2 id="wishlists-heading">Mga gift tag</h2><span aria-hidden="true">✨</span></div>
+  <div class="section-heading"><h2 id="wishlists-heading">Gift notes</h2><span aria-hidden="true">✨</span></div>
   <div id="wishlists-list" class="wishlist-masonry" aria-live="polite" aria-busy="true"></div>
-  <p id="wishlists-empty" class="empty-note" hidden>Wala pang wish list. Baka ikaw ang unang mag-iwan ng clue! 🎄</p>
+  <p id="wishlists-empty" class="empty-note" hidden>No wish lists yet. Be the first to leave a clue! 🎄</p>
 </section>
 {% endblock %}

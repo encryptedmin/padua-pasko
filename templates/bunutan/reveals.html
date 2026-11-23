@@ -1,10 +1,10 @@
 {% extends "bunutan/base.html" %}
-{% block title %}Mga nag-reveal · Bunutan{% endblock %}
+{% block title %}Shared Picks · Gift Exchange{% endblock %}
 {% block page_name %}reveals{% endblock %}
 {% block content %}
-<section class="page-heading"><div class="eyebrow">✨ Voluntary reveal lang</div><h1 class="display-title">Mga nag-<span>reveal</span></h1><p class="hero-copy">Resulta lang ito ng mga pumiling magbahagi.</p></section>
+<section class="page-heading"><div class="eyebrow">✨ Optional reveals</div><h1 class="display-title">Shared <span>picks</span></h1><p class="hero-copy">Only results shared by participants appear here.</p></section>
 <section class="reveal-board capiz-card"><ul id="reveals-list" class="reveal-list">
-  {% for reveal in reveals %}<li><span class="reveal-gift">🎁</span><span>{{ reveal.receiver__name }} was {{ reveal.giver__name }}'s monito/monita.</span></li>
-  {% empty %}<li class="empty-note">Wala pang nagre-reveal. Ssshh, respetuhin ang mga secret! 🤫</li>{% endfor %}
+  {% for reveal in reveals %}<li><span class="reveal-gift">🎁</span><span>{{ reveal.receiver__name }} was {{ reveal.giver__name }}'s recipient.</span></li>
+  {% empty %}<li class="empty-note">No one has shared a pick yet. Please respect everyone's secrets! 🤫</li>{% endfor %}
 </ul></section>
 {% endblock %}

@@ -7,10 +7,10 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="referrer" content="same-origin">
   <meta name="theme-color" content="#101b2b">
-  <meta name="description" content="Maligayang Pasko! A family bunutan for the season of giving.">
-  <meta property="og:title" content="Bunutan 🎁 Maligayang Pasko!">
-  <meta property="og:description" content="Gawa ng pamilya, para sa pamilya.">
-  <title>{% block title %}Bunutan 🎁 Maligayang Pasko!{% endblock %}</title>
+  <meta name="description" content="A family gift exchange for the season of giving.">
+  <meta property="og:title" content="Christmas Gift Exchange 🎁">
+  <meta property="og:description" content="Made by family, for family.">
+  <title>{% block title %}Christmas Gift Exchange 🎁{% endblock %}</title>
   <link rel="icon" type="image/svg+xml" href="{% static 'img/parol.svg' %}">
   <link rel="preload" href="{% static 'vendor/fonts/baloo2-400.ttf' %}" as="font" type="font/ttf" crossorigin>
   <link rel="stylesheet" href="{% static 'vendor/animate.min.css' %}">
@@ -29,7 +29,7 @@
       <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
     </div>
     <div class="header-inner">
-      <a class="brand" href="/" aria-label="Bunutan home"><span class="brand-gift">🎁</span><span>Bunutan</span></a>
+      <a class="brand" href="/" aria-label="Gift Exchange home"><span class="brand-gift">🎁</span><span>Gift Exchange</span></a>
       <div class="header-tools" aria-label="Display settings">
         <button class="icon-button" id="sound-toggle" type="button" aria-pressed="false" aria-label="Enable sound effects" title="Sound off">🔇</button>
         <button class="motion-toggle" id="motion-toggle" type="button" aria-pressed="false">Motion: auto</button>
@@ -55,8 +55,8 @@
 
   <footer class="site-footer">
     {% block footer_content %}
-    <p>Gawa ng pamilya, para sa pamilya 💝</p>
-    <nav aria-label="Family pages"><a href="/wishlists/">Wish lists</a><a href="/reveals/">Mga nag-reveal</a></nav>
+    <p>Made by family, for family 💝</p>
+    <nav aria-label="Family pages"><a href="/wishlists/">Wish lists</a><a href="/reveals/">Shared picks</a></nav>
     {% endblock %}
   </footer>
   <div id="toast-stack" class="toast-stack" role="status" aria-live="polite" aria-atomic="true"></div>

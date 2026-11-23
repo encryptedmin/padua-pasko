@@ -20,7 +20,7 @@ export function init() {
     saveParticipantId(sessionId);
   }
   submit.disabled = !participantId;
-  identityNote.textContent = participantId ? "Ready na ang save button para sa pangalan mo." : "Piliin muna ang pangalan mo para makapag-save.";
+  identityNote.textContent = participantId ? "Your wish list is ready to save." : "Choose your name to save your wish list.";
 
   function updateCount() {
     counter.textContent = `${input.value.length} / 500`;
@@ -44,7 +44,7 @@ export function init() {
       empty.hidden = wishlists.length > 0;
       list.setAttribute("aria-busy", "false");
     } catch (error) {
-      status.textContent = error.message || "Hindi ma-load ang wish lists. Pakisubukan ulit.";
+      status.textContent = error.message || "Couldn't load the wish lists. Please try again.";
       list.setAttribute("aria-busy", "false");
     }
   }
@@ -53,22 +53,22 @@ export function init() {
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (!participantId) {
-      status.textContent = "Pumili muna ng pangalan sa page ng bunutan.";
+      status.textContent = "Choose your name on the participant page first.";
       return;
     }
     if (input.value.length > 500) {
-      status.textContent = "Hanggang 500 character lang.";
+      status.textContent = "Wish lists can be up to 500 characters long.";
       return;
     }
     submit.disabled = true;
-    status.textContent = "Sine-save…";
+    status.textContent = "Saving…";
     try {
       await apiPost("/api/wishlist", { text: input.value });
-      status.textContent = "Na-save na ang wish list mo! 🎀";
-      showToast("Na-save ang wish list mo 🎀");
+      status.textContent = "Your wish list has been saved! 🎀";
+      showToast("Wish list saved 🎀");
       await loadLists();
     } catch (error) {
-      status.textContent = error.message || "Hindi na-save. Pakisubukan ulit.";
+      status.textContent = error.message || "Couldn't save the wish list. Please try again.";
     } finally {
       submit.disabled = !participantId;
     }

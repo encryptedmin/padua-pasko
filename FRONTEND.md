@@ -1,4 +1,4 @@
-# Bunutan frontend
+# Gift Exchange frontend
 
 This frontend uses Django templates, local static files, and vanilla JavaScript modules. It has no build step or npm dependency. Start the existing project with:
 
@@ -37,7 +37,7 @@ python manage.py runserver 0.0.0.0:8000
 3. Pick a name, verify the confirmation dialog, cancel, then confirm and reach the bowl.
 4. Load `/pick-name/` and `/bowl/` while the event is not OPEN; open it from the organizer panel and verify auto-transition.
 5. On a low-end Android phone and iPhone Safari, shake and draw; verify no double draw, the 3-second minimum, countdown, flight, and flip.
-6. Verify hold-to-reveal, keyboard/screen-reader toggle, `Itago`, 20-second idle hide, and hide on tab switch.
+6. Verify hold-to-reveal, keyboard/screen-reader toggle, `Hide`, 20-second idle hide, and hide on tab switch.
 7. Verify the recovery key is shown once and saved, then reopen `/my-pick/` on the same device. On a new device, test manual identity/key entry and confirm the backend limitation above is communicated.
 8. Enable OS reduced motion and the in-page motion setting; verify fades replace shake/flight/confetti.
 9. Use the organizer panel at 360 px width; verify stats, code copy/invitation, participant chips, exclusions, settings, danger confirmations, and RESET gate.

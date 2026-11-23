@@ -17,7 +17,7 @@ export function bindHoldReveal({ holdButton, toggleButton, hideButton, resultEle
     holdButton.setAttribute("aria-expanded", "false");
     if (toggleButton) {
       toggleButton.setAttribute("aria-pressed", "false");
-      toggleButton.textContent = "Ipakita ang pangalan";
+      toggleButton.textContent = "Show my pick";
     }
     if (hideButton) hideButton.hidden = true;
     onHide?.();
@@ -43,7 +43,7 @@ export function bindHoldReveal({ holdButton, toggleButton, hideButton, resultEle
       holdButton.setAttribute("aria-expanded", "true");
       if (toggleButton) {
         toggleButton.setAttribute("aria-pressed", "true");
-        toggleButton.textContent = "Pangalan ko 'to — nakatago";
+        toggleButton.textContent = "Hide my pick";
       }
       if (hideButton) hideButton.hidden = false;
       onShow?.();
