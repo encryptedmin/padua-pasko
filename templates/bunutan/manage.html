@@ -1,0 +1,129 @@
+{% extends "bunutan/base.html" %}
+{% block title %}Organizer dashboard · Bunutan{% endblock %}
+{% block page_name %}manage{% endblock %}
+{% block content %}
+<section class="manage-hero">
+  <div><div class="eyebrow">🕯️ Organizer corner</div><h1 class="display-title">Pasko <span>planner!</span></h1></div>
+  <form method="post" action="{% url 'manage_logout' %}">{% csrf_token %}<button class="btn btn-ghost" type="submit">Log out</button></form>
+</section>
+{% for message in messages %}<p class="manage-message {{ message.tags }}" role="status">{{ message }}</p>{% endfor %}
+<p class="organizer-privacy">🎄 Kasali ka rin sa bunutan – hindi mo makikita kung sino ang nabunot ng iba.</p>
+
+<section class="manage-stats capiz-card" aria-label="Bunutan progress" data-manage-stats>
+  <div class="section-heading"><h2>Family progress</h2><span id="event-status" class="status-pill">{{ status }}</span></div>
+  <div class="stats-grid">
+    <div class="stat-tile"><strong id="total-count">{{ progress|length }}</strong><span>kasali</span></div>
+    <div class="stat-tile"><strong id="drawn-count">—</strong><span>nakabunot</span></div>
+    <div class="stat-tile"><strong id="remaining-count">—</strong><span>slips left</span></div>
+  </div>
+  <div class="progress-track" id="progress-track" role="progressbar" aria-label="Participants who have drawn" aria-valuemin="0" aria-valuemax="{{ progress|length }}" aria-valuenow="0"><span id="progress-bar"></span></div>
+  <p id="progress-label" class="field-hint">Naglo-load ang family progress…</p>
+</section>
+
+<section class="manage-grid">
+  <section class="manage-card capiz-card" aria-labelledby="event-settings-heading">
+    <div class="section-heading"><h2 id="event-settings-heading">Event details</h2><span aria-hidden="true">📅</span></div>
+    <form id="event-settings-form" method="post">
+      {% csrf_token %}<input type="hidden" name="action" value="settings">
+      {{ settings_form.as_p }}
+      <button class="btn btn-secondary" type="submit">I-save ang details</button>
+    </form>
+  </section>
+
+  <section class="manage-card code-card capiz-card" aria-labelledby="manage-code-heading">
+    <div class="section-heading"><h2 id="manage-code-heading">Sikretong event code</h2><span aria-hidden="true">🔐</span></div>
+    <output id="event-code" class="event-code">{{ code }}</output>
+    <div class="code-actions">
+      <button id="copy-event-code-button" class="btn btn-ghost" type="button">Kopyahin ang code</button>
+      <button id="copy-invitation-button" class="btn btn-secondary" type="button">Kopyahin ang imbitasyon</button>
+    </div>
+    <span id="copy-event-code-status" class="sr-only" role="status" aria-live="polite"></span>
+    <form method="post" class="inline-form">
+      {% csrf_token %}<input type="hidden" name="action" value="regenerate_code">
+      <button class="text-action" type="submit">Gumawa ng bagong code</button>
+    </form>
+  </section>
+</section>
+
+<section class="manage-card capiz-card" aria-labelledby="participants-heading">
+  <div class="section-heading"><h2 id="participants-heading">Mga pangalan sa bowl</h2><span aria-hidden="true">👨‍👩‍👧‍👦</span></div>
+  {% if edits_locked %}<p class="field-hint">Naka-lock ang listahan kapag bukas na ang bunutan.</p>{% endif %}
+  <div class="participant-chips" id="progress-board">
+    {% for participant in progress %}
+      <article class="participant-chip {% if participant.has_drawn %}is-drawn{% endif %}">
+        <div class="chip-status" aria-hidden="true">{% if participant.has_drawn %}✓{% else %}✦{% endif %}</div>
+        <div class="chip-copy"><strong>{{ participant.name }}</strong><span>{% if participant.has_drawn %}Nakabunot na{% else %}Hindi pa nakabunot{% endif %}</span></div>
+        <form method="post" class="chip-delete-form">
+          {% csrf_token %}<input type="hidden" name="action" value="delete_participant"><input type="hidden" name="name" value="{{ participant.name }}">
+          <button class="icon-button delete-chip" type="submit" aria-label="Tanggalin si {{ participant.name }}" {% if edits_locked %}disabled{% endif %}>×</button>
+        </form>
+      </article>
+    {% empty %}<p class="empty-note">Wala pang pangalan. Simulan sa add form sa ibaba.</p>{% endfor %}
+  </div>
+  <div class="add-participant-grid">
+    <form method="post" class="add-one-form">
+      {% csrf_token %}<input type="hidden" name="action" value="add_one">
+      <label class="field-label" for="participant-name">Magdagdag ng isang pangalan</label>
+      <div class="form-row"><input class="text-input" id="participant-name" name="name" maxlength="40" {% if edits_locked %}disabled{% endif %}><button class="btn btn-primary" type="submit" {% if edits_locked %}disabled{% endif %}>Idagdag</button></div>
+    </form>
+    <form method="post" class="bulk-add-form">
+      {% csrf_token %}<input type="hidden" name="action" value="bulk_add">
+      <label class="field-label" for="participant-names">Bulk add — isa kada linya</label>
+      <textarea class="text-input" id="participant-names" name="names" rows="4" {% if edits_locked %}disabled{% endif %}></textarea>
+      <button class="btn btn-secondary" type="submit" {% if edits_locked %}disabled{% endif %}>Idagdag lahat</button>
+    </form>
+  </div>
+</section>
+
+<section class="manage-card capiz-card" aria-labelledby="exclusions-heading">
+  <div class="section-heading"><h2 id="exclusions-heading">Mutual exclusions</h2><span aria-hidden="true">🫶</span></div>
+  <p class="field-hint">Pumili ng dalawang pangalan na hindi dapat magbunutan sa isa't isa.</p>
+  <form method="post" id="exclusion-form" class="exclusion-form">
+    {% csrf_token %}
+    <label class="field-label" for="exclusion-name-a">Unang pangalan</label>
+    <select class="text-input" id="exclusion-name-a" name="name_a">{% for name in participant_names %}<option value="{{ name }}">{{ name }}</option>{% endfor %}</select>
+    <label class="field-label" for="exclusion-name-b">Ikalawang pangalan</label>
+    <select class="text-input" id="exclusion-name-b" name="name_b">{% for name in participant_names %}<option value="{{ name }}">{{ name }}</option>{% endfor %}</select>
+    <div class="form-row">
+      <button class="btn btn-secondary" type="submit" name="action" value="add_exclusion" {% if edits_locked %}disabled{% endif %}>Magdagdag ng exclusion</button>
+      <button class="btn btn-ghost" type="submit" name="action" value="remove_exclusion" {% if edits_locked %}disabled{% endif %}>Tanggalin ang exclusion</button>
+    </div>
+  </form>
+  {% if edits_locked %}<p class="field-hint">Naka-lock na ang exclusions matapos buksan.</p>{% endif %}
+</section>
+
+<section class="manage-card danger-zone" aria-labelledby="draw-actions-heading">
+  <div class="section-heading"><h2 id="draw-actions-heading">Bunutan controls</h2><span aria-hidden="true">🎛️</span></div>
+  <div class="draw-action-grid">
+    {% if status == "SETUP" %}
+    <form method="post" data-danger-action="open">
+      {% csrf_token %}<input type="hidden" name="action" value="open">
+      <button class="btn btn-primary btn-wide" type="submit">Buksan ang bunutan</button>
+    </form>
+    {% endif %}
+    {% if status == "OPEN" %}
+    <form method="post" data-danger-action="reveal">
+      {% csrf_token %}<input type="hidden" name="action" value="reveal">
+      <button class="btn btn-secondary btn-wide" type="submit">Simulan ang REVEAL</button>
+    </form>
+    {% endif %}
+    <form method="post" data-danger-action="close">
+      {% csrf_token %}<input type="hidden" name="action" value="close">
+      <button class="btn btn-ghost btn-wide" type="submit">Isara ang bunutan</button>
+    </form>
+  </div>
+  <p class="reset-explain">Kapag may nawalan ng recovery key, reset lang ang paraan para bumunot muli ang lahat.</p>
+  <form method="post" id="reset-form" data-danger-action="reset">
+    {% csrf_token %}<input type="hidden" name="action" value="reset">
+    <label class="field-label" for="reset-confirm">I-type ang RESET para mag-reset</label>
+    <div class="form-row"><input class="text-input reset-input" id="reset-confirm" name="confirm" autocomplete="off"><button class="btn btn-danger" type="submit">Reset draw</button></div>
+  </form>
+</section>
+
+<dialog id="action-confirm-modal" class="festive-dialog" aria-labelledby="action-modal-title">
+  <div class="dialog-sparkle" aria-hidden="true">⚠️</div>
+  <h2 id="action-modal-title">Sigurado ka ba?</h2>
+  <p id="action-modal-copy">Pakisuri muna bago magpatuloy.</p>
+  <div class="dialog-actions"><button id="confirm-action" class="btn btn-danger" type="button">Oo, magpatuloy</button><button id="cancel-action" class="btn btn-ghost" type="button">Hindi muna</button></div>
+</dialog>
+{% endblock %}

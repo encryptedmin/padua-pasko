@@ -1,0 +1,42 @@
+{% extends "bunutan/base.html" %}
+{% block title %}Piliin ang pangalan mo · Bunutan{% endblock %}
+{% block page_name %}pick-name{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div class="eyebrow">🎄 Family bunutan {{ event.year }}</div>
+  <h1 class="display-title">Ikaw ba si <span>…?</span></h1>
+  <p class="hero-copy">Piliin lang ang sarili mong pangalan – hindi puwedeng baguhin pagkabunot.</p>
+  <p class="event-meta" id="pick-event-meta">Budget: <strong id="event-budget">{{ event.budget_text }}</strong><span class="meta-separator">✦</span><span id="event-party-date">{% if event.party_date %}{{ event.party_date|date:"M j, Y" }}{% else %}Party date soon!{% endif %}</span></p>
+</section>
+
+<section id="waiting-state" class="waiting-card capiz-card" {% if is_open %}hidden{% endif %} aria-live="polite">
+  <div class="waiting-bowl" aria-hidden="true"><span>🎁</span></div>
+  <h2>Hindi pa bukas ang bunutan</h2>
+  <p>Konting hintay pa! Mag-a-update ito kapag binuksan na ng organizer.</p>
+  <p class="event-meta">Budget: <strong>{{ event.budget_text }}</strong><span class="meta-separator">✦</span>{% if event.party_date %}{{ event.party_date|date:"M j, Y" }}{% else %}Party date soon!{% endif %}</p>
+</section>
+
+<section id="pick-content" {% if not is_open %}hidden{% endif %}>
+  <div id="participant-cards" class="participant-grid" aria-live="polite" aria-busy="true"></div>
+  <form id="claim-form" method="post" action="/api/claim" hidden>
+    {% csrf_token %}
+    <input id="current-participant-id" type="hidden" value="{{ request.session.me|default:'' }}">
+    <label for="participant-select">Your name</label>
+    <select id="participant-select" name="participant_id"></select>
+    <button type="submit">Continue</button>
+  </form>
+  <p id="claim-error" class="form-message" role="alert" aria-live="assertive"></p>
+  <p class="field-hint recovery-help">Kung bagong phone ka at wala kang saved recovery key, kausapin ang organizer para matulungan kang mag-reset.</p>
+  <p class="privacy-note"><span aria-hidden="true">🤫</span> Piliin lang ang sarili mong pangalan – hindi puwedeng baguhin pagkabunot.</p>
+</section>
+
+<dialog id="claim-confirm-modal" class="festive-dialog" aria-labelledby="claim-modal-title">
+  <div class="dialog-sparkle" aria-hidden="true">✨</div>
+  <h2 id="claim-modal-title">Ikaw ba si <span id="confirm-participant-name"></span>?</h2>
+  <p>Siguraduhin muna bago humalo sa bowl!</p>
+  <div class="dialog-actions">
+    <button id="confirm-claim" class="btn btn-primary" type="button">Oo, ako 'yan!</button>
+    <button id="cancel-claim" class="btn btn-ghost" type="button">Hindi</button>
+  </div>
+</dialog>
+{% endblock %}

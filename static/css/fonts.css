@@ -1,0 +1,31 @@
+@font-face {
+  font-family: "Baloo 2";
+  src: url("../vendor/fonts/baloo2-400.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Baloo 2";
+  src: url("../vendor/fonts/baloo2-700.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Mountains of Christmas";
+  src: url("../vendor/fonts/mountains-400.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Mountains of Christmas";
+  src: url("../vendor/fonts/mountains-700.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}

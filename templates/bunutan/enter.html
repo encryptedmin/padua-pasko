@@ -1,0 +1,31 @@
+{% extends "bunutan/base.html" %}
+{% block title %}Ilagay ang Sikretong Code · Bunutan{% endblock %}
+{% block page_name %}enter{% endblock %}
+{% block content %}
+<section class="hero-card enter-card capiz-card" aria-labelledby="enter-title">
+  <div class="eyebrow"><span class="eyebrow-star">✦</span> Pasko na, pamilya!</div>
+  <h1 class="display-title" id="enter-title">Maligayang <span>Pasko!</span></h1>
+  <p class="hero-copy">Ilagay ang Sikretong Code para makasali sa ating bunutan.</p>
+  <form id="code-entry-form" method="post" action="/api/enter" novalidate>
+    {% csrf_token %}
+    <label class="field-label" for="code-input">Sikretong Code</label>
+    <div class="code-grid" id="code-boxes" role="group" aria-label="Nine character event code">
+      <input id="code-input" name="code" data-code-index="0" type="text" maxlength="1" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Code character 1" required>
+      <input data-code-index="1" type="text" maxlength="1" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Code character 2" required>
+      <input data-code-index="2" type="text" maxlength="1" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Code character 3" required>
+      <input data-code-index="3" type="text" maxlength="1" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Code character 4" required>
+      <input data-code-index="4" type="text" maxlength="1" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Code character 5" required>
+      <input data-code-index="5" type="text" maxlength="1" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Code character 6" required>
+      <input data-code-index="6" type="text" maxlength="1" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Code character 7" required>
+      <input data-code-index="7" type="text" maxlength="1" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Code character 8" required>
+      <input data-code-index="8" type="text" maxlength="1" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Code character 9" required>
+    </div>
+    <p class="field-hint">Pwede ring i-paste ang buong code ✨</p>
+    <p id="code-error" class="form-message" role="alert" aria-live="assertive"></p>
+    <p id="code-lockout" class="lockout-message" role="status" aria-live="polite" hidden></p>
+    <button class="btn btn-primary btn-wide" id="code-submit" type="submit"><span>Ipasok ang code</span><span aria-hidden="true">→</span></button>
+  </form>
+  <div class="tiny-copy"><span aria-hidden="true">🕯️</span> Family-only ang event code</div>
+</section>
+<div class="floating-sparkles" aria-hidden="true"><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span></div>
+{% endblock %}

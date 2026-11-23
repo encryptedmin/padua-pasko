@@ -1,0 +1,70 @@
+{% extends "bunutan/base.html" %}
+{% block title %}Haluin ang bowl! · Bunutan{% endblock %}
+{% block page_name %}bowl{% endblock %}
+{% block content %}
+<section class="page-heading bowl-heading">
+  <div class="eyebrow">🎁 Para kay {{ participant_name|default:"ikaw" }}</div>
+  <h1 class="display-title">Haluin ang <span>bowl!</span></h1>
+  <p class="event-meta">Budget: <strong id="bowl-budget">{{ event.budget_text }}</strong><span class="meta-separator">✦</span><span id="bowl-party-date">{% if event.party_date %}{{ event.party_date|date:"M j, Y" }}{% else %}Party date soon!{% endif %}</span></p>
+</section>
+
+<section id="waiting-state" class="waiting-card capiz-card" {% if is_open %}hidden{% endif %} aria-live="polite">
+  <div class="waiting-bowl" aria-hidden="true"><span>🎁</span></div>
+  <h2>Hindi pa bukas ang bunutan</h2>
+  <p>Wiggly-wait muna! Mag-a-update ang page kapag ready na.</p>
+</section>
+
+<section id="bowl-stage" class="bowl-stage" {% if not is_open %}hidden{% endif %}>
+  <input id="participant-id" type="hidden" value="{{ request.session.me }}">
+  <div class="bowl-scene" id="bowl-scene">
+    <div class="bowl-sparkle sparkle-one" aria-hidden="true">✦</div>
+    <div class="bowl-sparkle sparkle-two" aria-hidden="true">✧</div>
+    <div class="paper-field" id="slip-field" aria-hidden="true"></div>
+    <div class="grab-hand" id="grab-hand" aria-hidden="true">🖐️</div>
+    <svg class="gift-bowl" viewBox="0 0 360 250" role="img" aria-label="A bowl full of folded gift slips">
+      <defs>
+        <linearGradient id="bowl-rim" x1="0" x2="1"><stop offset="0" stop-color="#f9d77b"/><stop offset=".5" stop-color="#fff0bd"/><stop offset="1" stop-color="#d69a36"/></linearGradient>
+        <linearGradient id="bowl-body" x1="0" x2="1"><stop offset="0" stop-color="#c51f35"/><stop offset=".45" stop-color="#a8172b"/><stop offset="1" stop-color="#731326"/></linearGradient>
+      </defs>
+      <ellipse cx="180" cy="79" rx="143" ry="40" fill="#5e1430" stroke="url(#bowl-rim)" stroke-width="12"/>
+      <path d="M38 79c12 90 57 142 142 145 85-3 130-55 142-145-29 25-79 39-142 39S67 104 38 79z" fill="url(#bowl-body)" stroke="#e7b54d" stroke-width="7"/>
+      <path d="M74 157c27 24 64 37 106 37s79-13 106-37" fill="none" stroke="#f3c761" stroke-width="5" stroke-linecap="round" opacity=".7"/>
+      <path d="M92 211c20 10 50 15 88 15s68-5 88-15" fill="none" stroke="#ffdf8b" stroke-width="4" stroke-linecap="round" opacity=".7"/>
+      <ellipse cx="180" cy="79" rx="137" ry="34" fill="#1b3d35" stroke="url(#bowl-rim)" stroke-width="4"/>
+    </svg>
+    <div class="bowl-label" aria-hidden="true">Pasko picks ✨</div>
+  </div>
+
+  <p class="slips-remaining">May <strong id="remaining-count">—</strong> pangalan pa sa bowl</p>
+  <div class="bowl-actions">
+    <button id="shake-button" class="btn btn-secondary" type="button"><span aria-hidden="true">🌀</span> Haluin ang bowl!</button>
+    <button id="draw-button" class="btn btn-primary btn-wide" type="button"><span>Bunot na!</span><span aria-hidden="true">✨</span></button>
+  </div>
+  <p id="draw-error" class="form-message" role="alert" aria-live="assertive"></p>
+
+  <section id="draw-card" class="draw-card capiz-card" aria-label="Your folded bunutan slip" hidden>
+    <div id="countdown" class="draw-countdown" aria-live="assertive"></div>
+    <div class="flip-card" id="flip-card">
+      <div class="flip-card-inner" id="flip-card-inner">
+        <div class="flip-card-front"><span class="slip-stamp">🎄</span><span>Para sa'yo</span><span class="slip-stars">✦ ✧ ✦</span></div>
+        <div class="flip-card-back"><span class="slip-stamp">🎁</span><span>May lihim kang pangalan!</span></div>
+      </div>
+    </div>
+    <button id="hold-reveal" class="hold-reveal" type="button" aria-expanded="false" aria-controls="draw-result">
+      <span aria-hidden="true">🤫</span> Pindutin at hawakan para makita
+    </button>
+    <button id="accessibility-reveal-toggle" class="btn btn-ghost reveal-toggle" type="button" aria-pressed="false" aria-controls="draw-result">Ipakita ang pangalan</button>
+    <p id="draw-result" class="draw-result" aria-live="polite" aria-atomic="true"></p>
+    <div id="gift-rain" class="gift-rain" aria-hidden="true"></div>
+    <p id="secret-reminder" class="secret-reminder" hidden>Ssshh! Secret lang natin 🤫<br><span id="budget-reminder"></span></p>
+    <button id="hide-result-button" class="btn btn-ghost hide-result" type="button" hidden>Itago</button>
+    <div id="recovery-key-box" class="recovery-box" hidden>
+      <div><strong>🔐 Sikretong susi</strong><p>Ito ang pantingin mo ulit ng result. Kahit ang admin hindi nakakakita nito.</p></div>
+      <output id="recovery-key" class="recovery-key"></output>
+      <button id="copy-recovery-key" class="btn btn-small btn-ghost" type="button">Kopyahin</button>
+      <span id="copy-key-status" class="sr-only" role="status" aria-live="polite"></span>
+    </div>
+    <a id="my-pick-link" class="btn btn-link" href="/my-pick/">Naitago ko na ang susi — tingnan ulit ang pick ko</a>
+  </section>
+</section>
+{% endblock %}
