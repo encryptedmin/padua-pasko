@@ -37,7 +37,7 @@ if DEBUG:
 # Keep Django's own redirect off to avoid redirecting internal health probes.
 SECURE_SSL_REDIRECT = False
 SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_REFERRER_POLICY = "no-referrer"
+SECURE_REFERRER_POLICY = "same-origin"
 X_FRAME_OPTIONS = "DENY"
 SILENCED_SYSTEM_CHECKS = ["security.W008"] if render_hostname and not DEBUG else []
 SECURE_HSTS_SECONDS = int(os.environ.get("SECURE_HSTS_SECONDS", "0"))
