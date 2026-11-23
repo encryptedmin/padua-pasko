@@ -1,0 +1,26 @@
+/* Organizer-only refinements: keep the add-participant form easy to use on phones. */
+.add-one-form {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.participant-name-fields {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.participant-name-fields .field-label:not(:first-child) {
+  margin-top: 0.35rem;
+}
+
+.add-one-form > .btn {
+  min-height: 48px;
+}
+
+#participant-name-error:empty {
+  display: none;
+}
+
+.manage-login-card .form-message {
+  overflow-wrap: anywhere;
+}

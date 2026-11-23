@@ -1,11 +1,15 @@
 {% extends "bunutan/base.html" %}
+{% load static %}
 {% block title %}Organizer login · Bunutan{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/manage.css' %}">{% endblock %}
 {% block page_name %}manage-login{% endblock %}
+{% block skip_link_text %}Skip to content{% endblock %}
+{% block footer_content %}<p>Made by family, for family 💝</p>{% endblock %}
 {% block content %}
 <section class="hero-card manage-login-card capiz-card">
-  <div class="eyebrow">🕯️ Organizer corner</div>
+  <div class="eyebrow">🕯️ Organizer sign-in</div>
   <h1 class="display-title">Hello, <span>organizer!</span></h1>
-  <p class="hero-copy">Mag-sign in para ihanda ang family bunutan.</p>
+  <p class="hero-copy">Sign in to set up your family gift exchange.</p>
   {% for message in messages %}<p class="form-message" role="alert">{{ message }}</p>{% endfor %}
   <form id="organizer-login-form" method="post">
     {% csrf_token %}
@@ -13,7 +17,7 @@
     <input class="text-input" id="username" name="username" autocomplete="username" required>
     <label class="field-label" for="password">Password</label>
     <input class="text-input" id="password" name="password" type="password" autocomplete="current-password" required>
-    <button class="btn btn-primary btn-wide" type="submit">Mag-sign in</button>
+    <button class="btn btn-primary btn-wide" type="submit">Sign in</button>
   </form>
 </section>
 {% endblock %}

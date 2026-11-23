@@ -16,13 +16,14 @@
   <link rel="stylesheet" href="{% static 'vendor/animate.min.css' %}">
   <link rel="stylesheet" href="{% static 'css/fonts.css' %}">
   <link rel="stylesheet" href="{% static 'css/bunutan.css' %}">
+  {% block extra_css %}{% endblock %}
   <script defer src="{% static 'vendor/tailwind-browser.js' %}"></script>
   <script defer src="{% static 'vendor/gsap.min.js' %}"></script>
   <script defer src="{% static 'vendor/confetti.browser.min.js' %}"></script>
 </head>
 <body class="min-h-screen" data-page="{% block page_name %}generic{% endblock %}">
   <div class="sky-bokeh" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
-  <a class="skip-link" href="#main-content">Lumaktaw sa content</a>
+  <a class="skip-link" href="#main-content">{% block skip_link_text %}Skip to content{% endblock %}</a>
   <header class="site-header">
     <div class="light-string" aria-hidden="true">
       <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
@@ -53,8 +54,10 @@
   </main>
 
   <footer class="site-footer">
+    {% block footer_content %}
     <p>Gawa ng pamilya, para sa pamilya 💝</p>
     <nav aria-label="Family pages"><a href="/wishlists/">Wish lists</a><a href="/reveals/">Mga nag-reveal</a></nav>
+    {% endblock %}
   </footer>
   <div id="toast-stack" class="toast-stack" role="status" aria-live="polite" aria-atomic="true"></div>
 
