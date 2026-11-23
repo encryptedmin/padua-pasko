@@ -1,11 +1,19 @@
 import random
+import os
+from concurrent.futures import ThreadPoolExecutor
 from collections import Counter
+from io import StringIO
+from threading import Barrier
+from unittest import skipUnless
+from unittest.mock import patch
 
 from cryptography.fernet import Fernet
 from django.contrib.auth import get_user_model
+from django.contrib.sessions.models import Session
+from django.core.management import call_command
 from django.core.cache import cache
-from django.db import IntegrityError, transaction
-from django.test import Client, TestCase
+from django.db import DatabaseError, IntegrityError, close_old_connections, connection, transaction
+from django.test import Client, TestCase, TransactionTestCase
 
 from . import draw
 from .models import Event, Exclusion, Participant, Reveal
@@ -96,7 +104,11 @@ class DrawAlgorithmTests(TestCase):
 class ApiAndPrivacyTests(TestCase):
     def setUp(self):
         cache.clear()
-        self.event = Event.objects.create(year=2026, code="23456789A")
+        # The application intentionally treats Event(pk=1) as its singleton.
+        # PostgreSQL sequences don't roll back with TestCase transactions, so
+        # pinning the fixture avoids later tests accidentally exercising a
+        # different event after earlier cases consume sequence values.
+        self.event = Event.objects.create(pk=1, year=2026, code="23456789A")
         self.people = [Participant.objects.create(event=self.event, name=name) for name in ("Ate Joy", "Kuya Migs", "Lola Nena")]
         self.client = Client()
 
@@ -255,7 +267,7 @@ class ApiAndPrivacyTests(TestCase):
 class OrganizerTests(TestCase):
     def setUp(self):
         cache.clear()
-        self.event = Event.objects.create(year=2026, code="23456789A")
+        self.event = Event.objects.create(pk=1, year=2026, code="23456789A")
         self.people = [Participant.objects.create(event=self.event, name=name) for name in ("Mama", "Papa", "Ate Joy")]
         self.user = get_user_model().objects.create_user(username="admin", password="secret", is_staff=True)
         self.client.force_login(self.user)
@@ -266,6 +278,26 @@ class OrganizerTests(TestCase):
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
                 Participant.objects.create(event=self.event, name="  mAmA  ")
+
+    def test_participant_add_form_reports_case_insensitive_duplicates(self):
+        response = self.client.post(
+            "/manage/",
+            {"action": "add_one", "name": "mAmA"},
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "May kaparehong pangalan na: mAmA.")
+        self.assertEqual(Participant.objects.filter(event=self.event).count(), 3)
+
+    def test_participant_add_form_handles_database_integrity_error(self):
+        with patch.object(Participant, "save", side_effect=IntegrityError("duplicate")):
+            response = self.client.post(
+                "/manage/",
+                {"action": "add_one", "name": "Cousin Bea"},
+                follow=True,
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "May kaparehong pangalan na: Cousin Bea.")
 
     def test_open_validates_and_locked_edits_are_rejected(self):
         Participant.objects.create(event=self.event, name="Cousin Bea")
@@ -309,3 +341,96 @@ class OrganizerTests(TestCase):
         self.client.post("/manage/", {"action": "reveal"})
         self.event.refresh_from_db()
         self.assertEqual(self.event.status, Event.Status.REVEAL)
+
+
+class HealthAndBootstrapTests(TestCase):
+    def test_healthz_queries_database_without_creating_a_session(self):
+        before = Session.objects.count()
+        response = self.client.get("/healthz")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"ok": True})
+        self.assertNotIn("sessionid", response.cookies)
+        self.assertEqual(Session.objects.count(), before)
+
+    def test_healthz_returns_service_unavailable_on_database_error(self):
+        with patch("bunutan.views.connection.cursor", side_effect=DatabaseError("database unavailable")):
+            response = self.client.get("/healthz")
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json(), {"ok": False})
+
+    def test_ensure_superuser_skips_when_required_environment_is_missing(self):
+        env = os.environ.copy()
+        env.pop("DJANGO_SUPERUSER_USERNAME", None)
+        env.pop("DJANGO_SUPERUSER_PASSWORD", None)
+        output = StringIO()
+        with patch.dict(os.environ, env, clear=True):
+            call_command("ensure_superuser", stdout=output)
+        self.assertEqual(output.getvalue(), "")
+        self.assertFalse(get_user_model().objects.filter(username="render-organizer").exists())
+
+    def test_ensure_superuser_is_idempotent_and_preserves_existing_password(self):
+        env = {
+            "DJANGO_SUPERUSER_USERNAME": "render-organizer",
+            "DJANGO_SUPERUSER_PASSWORD": "first-secret-password",
+            "DJANGO_SUPERUSER_EMAIL": "organizer@example.test",
+        }
+        output = StringIO()
+        with patch.dict(os.environ, env, clear=False):
+            call_command("ensure_superuser", stdout=output)
+        user = get_user_model().objects.get(username="render-organizer")
+        original_hash = user.password
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.is_superuser)
+        self.assertTrue(user.check_password("first-secret-password"))
+
+        env["DJANGO_SUPERUSER_PASSWORD"] = "replacement-must-not-be-used"
+        output = StringIO()
+        with patch.dict(os.environ, env, clear=False):
+            call_command("ensure_superuser", stdout=output)
+        user.refresh_from_db()
+        self.assertEqual(user.password, original_hash)
+        self.assertTrue(user.check_password("first-secret-password"))
+        self.assertIn("already exists; unchanged", output.getvalue())
+        self.assertNotIn("replacement-must-not-be-used", output.getvalue())
+
+
+@skipUnless(connection.vendor == "postgresql", "row-lock concurrency test requires PostgreSQL")
+class DrawConcurrencyTests(TransactionTestCase):
+    reset_sequences = True
+
+    def setUp(self):
+        self.event = Event.objects.create(pk=1, year=2026, code="23456789A", status=Event.Status.OPEN)
+        self.people = [
+            Participant.objects.create(event=self.event, name=name)
+            for name in ("Mama", "Papa", "Ate Joy", "Kuya Migs", "Lola Nena")
+        ]
+
+    def _client_for(self, participant):
+        client = Client()
+        session = client.session
+        session["code_ok"] = True
+        session["me"] = participant.pk
+        session.save()
+        return client
+
+    def test_simultaneous_draws_by_different_givers_take_distinct_receivers(self):
+        clients = [self._client_for(person) for person in self.people[:2]]
+        barrier = Barrier(3)
+
+        def draw(client):
+            close_old_connections()
+            try:
+                barrier.wait(timeout=15)
+                return client.post("/api/draw", data="{}", content_type="application/json")
+            finally:
+                connection.close()
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            futures = [pool.submit(draw, client) for client in clients]
+            barrier.wait(timeout=15)
+            responses = [future.result(timeout=30) for future in futures]
+
+        self.assertEqual([response.status_code for response in responses], [200, 200])
+        names = [response.json()["name"] for response in responses]
+        self.assertEqual(len(set(names)), 2)
+        self.assertEqual(Participant.objects.filter(event=self.event, slip_taken=True).count(), 2)

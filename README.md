@@ -4,50 +4,74 @@ Bunutan is a small server-rendered Django app for a Filipino Christmas gift exch
 
 ## Requirements
 
-- Python 3.14.5
-- Django 6.1 (the current release line compatible with Python 3.14)
-- SQLite, included with Python
-- `cryptography` for Fernet encryption
-
-The only Python dependencies are Django and `cryptography`.
+- Python 3.12.11 for Render; local Python 3.12 or newer.
+- SQLite for local development and tests; PostgreSQL for deployment.
+- Exact Python package versions are pinned in `requirements.txt`.
 
 ## Setup
 
-On Windows, double-click `start-system.bat` for local testing. It creates `.venv` and installs the listed requirements when needed, checks/creates model migrations, applies pending migrations, and starts the server at `http://127.0.0.1:8000/`. It does not create an organizer account or add demo participants; on a fresh database, run `python manage.py createsuperuser` and `python manage.py seed_demo` once from this folder.
+On Windows, double-click `start-system.bat`. It prepares `.venv`, installs the pinned requirements, applies model and database migrations, checks Django, and starts the local server at `http://127.0.0.1:8000/`. This launcher explicitly uses SQLite, a per-run development secret, and debug mode; it is not a deployment launcher.
 
-From this directory, create and activate a virtual environment, then install dependencies and prepare the database:
-
-```powershell
-py -3.14 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-
-$env:DJANGO_SECRET_KEY = "replace-with-a-long-random-secret"
-$env:DJANGO_DEBUG = "True"
-$env:DJANGO_ALLOWED_HOSTS = "localhost,127.0.0.1"
-
-python manage.py migrate
-python manage.py createsuperuser
-python manage.py seed_demo
-python manage.py runserver
-```
-
-The organizer account is a Django staff user created with `createsuperuser`; use `/manage/login/` to sign in. The demo command creates the event and ten example participants, including one mutual spouse exclusion. It is safe to rerun while the event is still in `SETUP`.
-
-For deployment, set `DJANGO_SECRET_KEY` to a private random value, set `DJANGO_DEBUG=False`, and set `DJANGO_ALLOWED_HOSTS` to the exact host names or IP addresses that serve the app. Do not use the development fallback key in a public deployment.
-
-## Reach the app on family phones
-
-Connect the host computer and phones to the same trusted Wi-Fi network. Find the computer's private LAN address, then set it in `DJANGO_ALLOWED_HOSTS` and bind Django to all network interfaces:
+The launcher does not create organizer accounts or seed demo names. For a fresh local database, stop the server and run:
 
 ```powershell
-$env:DJANGO_SECRET_KEY = "your-private-random-secret"
-$env:DJANGO_DEBUG = "False"
-$env:DJANGO_ALLOWED_HOSTS = "localhost,127.0.0.1,192.168.1.25"
-python manage.py runserver 0.0.0.0:8000
+.\.venv\Scripts\python.exe manage.py createsuperuser
+.\.venv\Scripts\python.exe manage.py seed_demo
 ```
 
-Replace `192.168.1.25` with the host computer's actual LAN address. Family members can open `http://192.168.1.25:8000/` on their phones and enter the event code from `/manage/`. Allow inbound TCP port 8000 on the host firewall for the trusted family network only. For an internet-facing deployment, use a production WSGI/ASGI server and HTTPS rather than Django's development server.
+For manual development, set `DEBUG=1` and leave `DATABASE_URL` unset (or empty) to use SQLite. A random secret is generated for that debug process if `SECRET_KEY` is not supplied. The organizer account is a Django staff superuser; use `/manage/login/` to sign in. The demo command adds ten sample participants and a mutual spouse exclusion, and is safe to rerun while the event remains in `SETUP`.
+
+## Deploying to Render + Aiven
+
+### Aiven PostgreSQL
+
+Create a PostgreSQL service on Aiven and copy its **Service URI** from the connection information. Put the complete URI in Render's `DATABASE_URL` environment variable, including its actual host, non-default port, database name, credentials, and `?sslmode=require`. The settings parse the URI without assuming port 5432 and require SSL if the URI does not specify an `sslmode`.
+
+Do not restrict the Aiven IP allow-list to one Render address. Render services use shared regional outbound IP ranges, and routing can rotate among them; dedicated static outbound IPs are a separate paid feature. See [Render outbound IP documentation](https://render.com/docs/outbound-ip-addresses) and [Render free-instance limitations](https://render.com/docs/free).
+
+### Render configuration
+
+Connect this repository to Render and create the web service from `render.yaml`. It uses Python `3.12.11`, Singapore, the Free plan, `bash build.sh`, and this start command:
+
+```sh
+gunicorn bunutan_site.wsgi:application --workers 1 --threads 4 --timeout 60 --bind 0.0.0.0:$PORT
+```
+
+The single worker is intentional: code-entry and recovery-key lockouts use process-local `LocMemCache`. The command omits Gunicorn's access log so draw endpoints and recovery requests aren't recorded as access lines.
+
+| Environment variable | Render value / purpose |
+| --- | --- |
+| `PYTHON_VERSION` | `3.12.11`, pinned to a full version supported by Render. |
+| `WEB_CONCURRENCY` | `1`; keep the process count at one. |
+| `DEBUG` | `False`. |
+| `SECURE_HSTS_SECONDS` | `31536000` (one year) for the HTTPS-only Render hostname. |
+| `SECRET_KEY` | Generated by the Render blueprint; keep it private. |
+| `DATABASE_URL` | Add the Aiven PostgreSQL Service URI manually in Render after the initial SQLite-backed deploy. |
+| `RENDER_EXTERNAL_HOSTNAME` | Set by Render; the app adds it to allowed hosts and trusted HTTPS origins. |
+| `ALLOWED_HOSTS` | Optional comma-separated extra hostnames. |
+| `CSRF_TRUSTED_ORIGINS` | Optional comma-separated scheme-qualified origins, for example `https://family.example.com`. |
+| `DJANGO_SUPERUSER_USERNAME` | Add with the other organizer variables when connecting Aiven. |
+| `DJANGO_SUPERUSER_PASSWORD` | Add securely in Render; never commit it. |
+| `DJANGO_SUPERUSER_EMAIL` | Optional organizer email to add in Render. |
+
+`build.sh` installs the pinned packages, collects static files, applies migrations, and runs `ensure_superuser`. For the first deploy, it uses temporary SQLite because the Aiven URI is intentionally added after the service is up. Do not add participants or event data until `DATABASE_URL` points to Aiven: free Render filesystems are ephemeral. `ensure_superuser` skips quietly without username/password variables, creates the organizer account when missing, and never changes an existing account's password. Add the Aiven URI and organizer variables securely in the Render dashboard; never commit real values to `.env.example` or source control.
+
+Render's Python version setting requires a fully qualified version. The official docs currently list `3.12.11` as supported; see [Setting Your Python Version](https://render.com/docs/python-version).
+
+### Keep the free service awake and smoke-test it
+
+Configure an external cron to request `https://<your-service>.onrender.com/healthz` every 10 minutes. The endpoint runs only `SELECT 1`, does not touch sessions or participant data, and returns 503 if the database is unavailable. Render's free web services otherwise spin down after 15 minutes without inbound traffic and use an ephemeral filesystem, so production data must stay in Aiven PostgreSQL rather than SQLite. See [Render free-instance limitations](https://render.com/docs/free).
+
+After the first deploy, check:
+
+1. `/healthz` returns `{"ok": true}`.
+2. `/` loads and accepts the event code.
+3. The organizer can sign in at `/manage/login/`.
+4. Add participants, then open the bunutan.
+5. Draw on two separate phones and verify both draws complete.
+6. Verify the organizer dashboard shows only participant names and drawn/not-drawn status, never picks or recovery keys.
+
+Security-check notes: HSTS is set for one year on Render, without applying it to subdomains. `SECURE_SSL_REDIRECT` remains disabled because Render terminates HTTPS and performs the HTTP-to-HTTPS redirect. Django's corresponding deploy-check warning is silenced only for Render, where the edge enforces that redirect. Django's deployment checklist recommends configuring the redirect at either the app or its reverse proxy ([Render TLS docs](https://render.com/docs/tls), [Django deploy checks](https://docs.djangoproject.com/en/6.1/ref/checks/)).
 
 ## Privacy model and limits
 
@@ -56,7 +80,7 @@ Replace `192.168.1.25` with the host computer's actual LAN address. Family membe
 - Members see each participant's draw status and a remaining-slip count. The public participant endpoint contains only `id`, `name`, and `has_drawn` for each person.
 - The Fernet key is the only way to recover that participant's encrypted result. If it is lost, the organizer must reset the draw; everybody draws again.
 - This protects picks from someone inspecting the database or using the organizer panel. The shared event code does not verify individual identity: anyone who knows it can select another participant's name before that participant draws. The app therefore relies on family members to choose their own names. Add individual authentication before using it where identity impersonation is a concern.
-- Run with `DJANGO_DEBUG=False`, keep the Django secret private, and do not browse or copy the SQLite database during the draw. Database access can reveal participant status and encrypted picks even though it cannot decrypt them without the one-time keys.
+- Run with `DEBUG=False`, keep `SECRET_KEY` private, and do not browse or copy the SQLite database during the draw. Database access can reveal participant status and encrypted picks even though it cannot decrypt them without the one-time keys.
 - Mutual swaps such as A drawing B and B drawing A are valid by design. Exclusions only prohibit the configured mutual pairs and self-draws.
 - The default LocMem cache keeps wrong-code and wrong-key lockouts in process memory. It is suitable for a single-process family event server. A multi-process deployment needs a shared cache to enforce lockouts consistently.
 
@@ -74,7 +98,18 @@ Replace `192.168.1.25` with the host computer's actual LAN address. Family membe
 Run the requested Django and matching-algorithm suite with:
 
 ```powershell
-$env:DJANGO_SECRET_KEY = "test-only-secret"
-python manage.py test
+$env:DEBUG = "1"
+$env:DATABASE_URL = ""
+.\.venv\Scripts\python.exe manage.py test
 ```
+
+For a PostgreSQL run, create a local throwaway database and use its connection URI (never the Aiven URI for tests):
+
+```powershell
+$env:DEBUG = "1"
+$env:DATABASE_URL = "postgresql://<local-user>:<local-password>@127.0.0.1:5432/<throwaway-db>?sslmode=disable"
+.\.venv\Scripts\python.exe manage.py test
+```
+
+The local PostgreSQL user needs permission to create and drop Django's temporary `test_<database-name>` database. The PostgreSQL-only concurrency test runs in this configuration; it is skipped for SQLite.
 

@@ -25,15 +25,14 @@ if errorlevel 1 goto :venv_failed
 :venv_ready
 set "PYTHON=%VENV_PY%"
 
-"%PYTHON%" -c "import django, cryptography" >nul 2>&1
-if errorlevel 1 (
-    echo Installing Bunutan Python requirements...
-    "%PYTHON%" -m pip install -r "%~dp0requirements.txt"
-    if errorlevel 1 goto :install_failed
-)
+echo Checking Bunutan Python requirements...
+"%PYTHON%" -m pip install -r "%~dp0requirements.txt"
+if errorlevel 1 goto :install_failed
 
-set "DJANGO_DEBUG=True"
-set "DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1"
+REM Force the local launcher to use SQLite and an ephemeral development key.
+set "DATABASE_URL="
+set "SECRET_KEY="
+set "DEBUG=1"
 
 echo.
 echo Preparing the Bunutan database...

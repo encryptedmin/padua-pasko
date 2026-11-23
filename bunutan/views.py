@@ -12,7 +12,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, transaction
+from django.db import DatabaseError, IntegrityError, connection, transaction
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
@@ -106,6 +106,17 @@ def csrf_failure(request: HttpRequest, reason: str = "") -> HttpResponse:
     if request.path.startswith("/api/"):
         return json_error("csrf_failed", "Hindi na-verify ang request. I-refresh ang page at subukan ulit.", 403)
     return HttpResponse("CSRF verification failed.", status=403)
+
+
+@require_GET
+def healthz(request: HttpRequest) -> JsonResponse:
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+    except DatabaseError:
+        return JsonResponse({"ok": False}, status=503)
+    return JsonResponse({"ok": True})
 
 
 @require_GET
@@ -267,34 +278,35 @@ def api_draw(request: HttpRequest) -> JsonResponse:
 
     try:
         with transaction.atomic():
-            current_event = Event.objects.select_for_update().get(pk=1)
+            locked_participants = list(
+                Participant.objects.select_for_update().filter(event=event).order_by("pk")
+            )
+            current_event = Event.objects.select_for_update().get(pk=event.pk)
             if current_event.status != Event.Status.OPEN:
                 return json_error("not_open", "Hindi pa bukas ang bunutan.", 409)
-            giver = Participant.objects.select_for_update().filter(event=event, pk=me).first()
+            locked_by_id = {participant.pk: participant for participant in locked_participants}
+            giver = locked_by_id.get(me)
             if giver is None:
                 request.session.pop("me", None)
                 return json_error("not_claimed", "Piliin muna ang pangalan mo.", 401)
             if giver.has_drawn:
                 return json_error("already_drawn", "Nakabunot ka na. Gamitin ang recovery key para makita ulit ang resulta.", 409)
-            remaining_giver_ids = list(
-                Participant.objects.filter(event=event, has_drawn=False).values_list("pk", flat=True)
-            )
-            remaining_receiver_ids = list(
-                Participant.objects.filter(event=event, slip_taken=False).values_list("pk", flat=True)
-            )
+            remaining_giver_ids = [participant.pk for participant in locked_participants if not participant.has_drawn]
+            remaining_receiver_ids = [participant.pk for participant in locked_participants if not participant.slip_taken]
             secrets.SystemRandom().shuffle(remaining_giver_ids)
             secrets.SystemRandom().shuffle(remaining_receiver_ids)
-            forbidden = _forbidden_pairs(event, remaining_giver_ids)
+            forbidden = _forbidden_pairs(current_event, remaining_giver_ids)
             receiver_id = draw.choose_receiver(
                 giver.pk, remaining_giver_ids, remaining_receiver_ids, forbidden
             )
-            receiver = Participant.objects.get(event=event, pk=receiver_id)
+            receiver = locked_by_id[receiver_id]
             recovery_key = Fernet.generate_key()
             sealed_pick = Fernet(recovery_key).encrypt(receiver.name.encode("utf-8")).decode("ascii")
             giver.has_drawn = True
             giver.sealed_pick = sealed_pick
             giver.save(update_fields=("has_drawn", "sealed_pick"))
-            Participant.objects.filter(event=event, pk=receiver.pk).update(slip_taken=True)
+            receiver.slip_taken = True
+            receiver.save(update_fields=("slip_taken",))
     except draw.DrawDeadlock:
         return json_error("deadlock", "Hindi natuloy ang bunutan. Ipaalam ito sa organizer para i-reset.", 500)
 
@@ -421,15 +433,19 @@ def _add_participant_names(event: Event, raw_names: list[str]) -> tuple[int, lis
     for name in clean_names:
         folded = name.casefold()
         if folded in seen:
+            errors.append(f"May kaparehong pangalan na: {name}.")
             continue
         seen.add(folded)
         if len(name) > 40:
             errors.append(f"{name[:40]}… ay lampas sa 40 character.")
             continue
         try:
-            Participant.objects.create(event=event, name=name)
+            with transaction.atomic():
+                Participant.objects.create(event=event, name=name)
             added += 1
-        except (IntegrityError, ValidationError):
+        except IntegrityError:
+            errors.append(f"May kaparehong pangalan na: {name}.")
+        except ValidationError:
             errors.append(f"Hindi maidagdag ang {name}.")
     return added, errors
 
@@ -489,29 +505,34 @@ def manage_dashboard(request: HttpRequest) -> HttpResponse:
                         deleted, _ = Exclusion.objects.filter(event=event, a=first, b=second).delete()
                         messages.success(request, "Tinanggal ang exclusion." if deleted else "Walang ganoong exclusion.")
         elif action == "open":
-            if event.status != Event.Status.SETUP:
-                messages.error(request, "Setup status lang ang puwedeng buksan.")
-            else:
-                ids = list(Participant.objects.filter(event=event).values_list("pk", flat=True))
-                if len(ids) < 3:
-                    messages.error(request, "Kailangan ng hindi bababa sa 3 participants.")
-                elif draw.has_perfect_matching(ids, ids, _forbidden_pairs(event, ids)):
-                    event.status = Event.Status.OPEN
-                    event.save(update_fields=("status",))
-                    messages.success(request, "Bukas na ang bunutan.")
+            with transaction.atomic():
+                locked_participants = list(
+                    Participant.objects.select_for_update().filter(event=event).order_by("pk")
+                )
+                event = Event.objects.select_for_update().get(pk=event.pk)
+                if event.status != Event.Status.SETUP:
+                    messages.error(request, "Setup status lang ang puwedeng buksan.")
                 else:
+                    ids = [participant.pk for participant in locked_participants]
                     forbidden = _forbidden_pairs(event, ids)
-                    blocked = [
-                        _find_participant(event, str(name)).name
-                        for participant_id, name in Participant.objects.filter(event=event).values_list("pk", "name")
-                        if not any(draw.allowed(participant_id, receiver, forbidden) for receiver in ids)
-                    ]
-                    if blocked:
-                        detail = "Walang pinapayagang recipient para kay: " + ", ".join(blocked) + "."
+                    if len(ids) < 3:
+                        messages.error(request, "Kailangan ng hindi bababa sa 3 participants.")
+                    elif draw.has_perfect_matching(ids, ids, forbidden):
+                        event.status = Event.Status.OPEN
+                        event.save(update_fields=("status",))
+                        messages.success(request, "Bukas na ang bunutan.")
                     else:
-                        pairs = [f"{a} ↔ {b}" for a, b in Exclusion.objects.filter(event=event).values_list("a__name", "b__name")]
-                        detail = "Pinagsama-sama, ginagawang imposibleng kumpletuhin ng self-draw rule at exclusions ang assignment. Suriin ang exclusions: " + (", ".join(pairs) if pairs else "walang exclusion na naka-set") + "."
-                    messages.error(request, detail)
+                        blocked = [
+                            participant.name
+                            for participant in locked_participants
+                            if not any(draw.allowed(participant.pk, receiver, forbidden) for receiver in ids)
+                        ]
+                        if blocked:
+                            detail = "Walang pinapayagang recipient para kay: " + ", ".join(blocked) + "."
+                        else:
+                            pairs = [f"{a} ↔ {b}" for a, b in Exclusion.objects.filter(event=event).values_list("a__name", "b__name")]
+                            detail = "Pinagsama-sama, ginagawang imposibleng kumpletuhin ng self-draw rule at exclusions ang assignment. Suriin ang exclusions: " + (", ".join(pairs) if pairs else "walang exclusion na naka-set") + "."
+                        messages.error(request, detail)
         elif action == "close":
             event.status = Event.Status.CLOSED
             event.save(update_fields=("status",))
@@ -530,10 +551,12 @@ def manage_dashboard(request: HttpRequest) -> HttpResponse:
                 messages.error(request, "I-type ang RESET para kumpirmahin ang pagbura ng draw results.")
             else:
                 with transaction.atomic():
-                    Participant.objects.filter(event=event).update(has_drawn=False, slip_taken=False, sealed_pick=None)
-                    Reveal.objects.filter(event=event).delete()
-                    event.status = Event.Status.SETUP
-                    event.save(update_fields=("status",))
+                    list(Participant.objects.select_for_update().filter(event=event).order_by("pk"))
+                    locked_event = Event.objects.select_for_update().get(pk=event.pk)
+                    Participant.objects.filter(event=locked_event).update(has_drawn=False, slip_taken=False, sealed_pick=None)
+                    Reveal.objects.filter(event=locked_event).delete()
+                    locked_event.status = Event.Status.SETUP
+                    locked_event.save(update_fields=("status",))
                 messages.success(request, "Na-reset ang draw. Kailangang bumunot muli ang lahat.")
         else:
             messages.error(request, "Hindi kilalang action.")
