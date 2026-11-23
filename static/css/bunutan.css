@@ -157,7 +157,8 @@ textarea.text-input { min-height: 112px; resize: vertical; }
 .page-heading .display-title span { color: #ffcf6a; }
 .page-heading .hero-copy { color: #e2e7df; }
 .event-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 9px; margin: 14px 0 0; color: #e9d9b2; font-size: .95rem; }
-.event-meta strong { color: #fff0c0; }
+.event-meta strong { color: #8fe0ad; }
+.waiting-card .event-meta strong { color: #1d6549; }
 .meta-separator { color: var(--gold); }
 .waiting-card { width: min(100%, 600px); margin: 15px auto 24px; padding: 25px; text-align: center; }
 .waiting-card h2 { margin: 0 0 4px; color: #194333; font-family: "Mountains of Christmas", Georgia, serif; font-size: 2rem; }

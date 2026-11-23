@@ -24,3 +24,48 @@
 .manage-login-card .form-message {
   overflow-wrap: anywhere;
 }
+
+.exclusion-pair-list {
+  display: grid;
+  gap: 0.55rem;
+  margin: 12px 0 14px;
+  padding: 0;
+  border: 0;
+}
+
+.exclusion-pair-list legend {
+  margin-bottom: 0.35rem;
+}
+
+.exclusion-pair-option {
+  display: flex !important;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0 !important;
+  padding: 10px 13px;
+  border: 1px solid #e3cd8e;
+  border-radius: 14px;
+  color: #244334;
+  background: #fffdf7;
+  cursor: pointer;
+}
+
+.exclusion-pair-option input {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: 0 0 auto;
+  accent-color: #1d6549;
+}
+
+.exclusion-pair-option span {
+  overflow-wrap: anywhere;
+}
+
+.remove-exclusion-form > .btn,
+.exclusion-form > .btn {
+  width: 100%;
+}
+
+.exclusion-form > .btn {
+  margin-top: 12px;
+}

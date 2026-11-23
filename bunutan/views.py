@@ -399,9 +399,12 @@ def staff_required(view):
 def _manage_context(event: Event, form: EventSettingsForm | None = None) -> dict:
     progress = list(Participant.objects.filter(event=event).values("name", "has_drawn"))
     participant_names = list(Participant.objects.filter(event=event).values_list("name", flat=True))
-    exclusion_pairs = list(
-        Exclusion.objects.filter(event=event).values_list("a__name", "b__name")
-    )
+    exclusion_pairs = [
+        {"id": exclusion.pk, "name_a": exclusion.a.name, "name_b": exclusion.b.name}
+        for exclusion in Exclusion.objects.filter(event=event)
+        .select_related("a", "b")
+        .order_by("a__name", "b__name")
+    ]
     return {
         "event_settings": {
             "title": event.title,
@@ -491,6 +494,16 @@ def manage_dashboard(request: HttpRequest) -> HttpResponse:
         elif action in {"add_exclusion", "remove_exclusion"}:
             if event.status != Event.Status.SETUP:
                 messages.error(request, "Naka-lock na ang exclusions pagkatapos buksan ang bunutan.")
+            elif action == "remove_exclusion":
+                try:
+                    exclusion_id = int(request.POST.get("exclusion_id", ""))
+                except (TypeError, ValueError):
+                    exclusion_id = -1
+                deleted, _ = Exclusion.objects.filter(event=event, pk=exclusion_id).delete()
+                if deleted:
+                    messages.success(request, "Inalis ang mutual exclusion.")
+                else:
+                    messages.error(request, "Pumili muna ng exclusion na aalisin.")
             else:
                 a = _find_participant(event, request.POST.get("name_a", ""))
                 b = _find_participant(event, request.POST.get("name_b", ""))
@@ -501,9 +514,6 @@ def manage_dashboard(request: HttpRequest) -> HttpResponse:
                     if action == "add_exclusion":
                         _, created = Exclusion.objects.get_or_create(event=event, a=first, b=second)
                         messages.success(request, "Idinagdag ang mutual exclusion." if created else "Naka-set na ang exclusion na ito.")
-                    else:
-                        deleted, _ = Exclusion.objects.filter(event=event, a=first, b=second).delete()
-                        messages.success(request, "Tinanggal ang exclusion." if deleted else "Walang ganoong exclusion.")
         elif action == "open":
             with transaction.atomic():
                 locked_participants = list(
